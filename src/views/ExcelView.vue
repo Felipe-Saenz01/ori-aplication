@@ -12,7 +12,7 @@
             <input @change="handleFileChange" class="w-ful bg-gray-200 text-black rounded-md h-12 p-2" type="file"  >
       </div>
       <div class="flex justify-center mt-5 text-white">
-        <button @click="handleFileUpload" class="bg-green-500/100 hover:bg-green-600/100 w-1/5 h-8 rounded-md font-bold">Guardar</button>
+        <button @click="handleSaveFile" class="bg-green-500/100 hover:bg-green-600/100 w-1/5 h-8 rounded-md font-bold">Guardar</button>
       </div>
 
     </div>
@@ -20,11 +20,11 @@
       <table v-if="(excelData)" class="w-full text-sm rtl:text-right text-gray-200">
         <thead class="text-xs text-center uppercase bg-gray-700  text-gray-400">
             <tr>
-                <th v-for="(value, key) in excelData[0]" :key="key" scope="col" class="px-6 py-3">{{ value }}</th>
+                <th v-for="(header, key) in headers" :key="key" scope="col" class="px-6 py-3">{{ header }}</th>
             </tr>
         </thead>
         <tbody class="text-left">
-            <tr v-for="(row, index) in excelData.slice(1)" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+            <tr v-for="(row, index) in excelData" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                 <td v-for="(value, key) in row" :key="key" scope="row" class="px-6 py-4 font-medium whitespace-nowrap ">{{ value }}</td>
             </tr>
 
@@ -37,8 +37,13 @@
 <script setup>
 import { ref } from 'vue';
 import * as XLSX from 'xlsx';
+import { db } from '@/services/firebase.js';
+import {collection, addDoc, Timestamp} from 'firebase/firestore';
+
+
 const file = ref(null);
 const excelData = ref(null);
+const headers = ref([])
 
 const handleFileChange = (event) => {
   file.value = event.target.files[0];
@@ -58,13 +63,43 @@ const handleFileUpload = () => {
 
     const worksheet = workbook.Sheets[workbook.SheetNames[0]]; // Solo toma la primera hoja del archivo Excel
     const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-    excelData.value = rows; // Almacena los datos del archivo Excel en la variable excelData
 
-   
-    console.log('Datos del archivo Excel:', excelData.value); // Imprimir los primeros 5 elementos
-    // Aquí puedes guardar el JSON en alguna variable o enviarlo a alguna función para su procesamiento
+    headers.value= rows[0];
+    
+    const formattedData = rows.slice(1).map(row => {
+      const formattedRow = {};
+      rows[0].forEach((header, index) => {
+        formattedRow[header] = row[index];
+      });
+      return formattedRow;
+    });
+
+    excelData.value = formattedData; // Almacena los datos del archivo Excel en la variable excelData
+
+    console.log(file.value.name)
   };
-  reader.readAsArrayBuffer(file.value);
+  reader.readAsArrayBuffer(file.value); 
 };
+
+const handleSaveFile = async () => {
+  if (!file.value) {
+    console.error('No se ha seleccionado ningún archivo.');
+    return;
+  }
+    
+  try {
+    const docRef = await addDoc(collection(db, "files"), {
+      name: file.value.name,
+      headers: headers.value,
+      data: excelData.value,
+      created: Timestamp.now()
+    });
+    console.log('Archivo subido correctamente a Firestore con ID:', docRef);
+  } catch (error) {
+    console.error('Error al subir el archivo a Firestore:', error);
+  }
+
+  
+}
 
 </script>
