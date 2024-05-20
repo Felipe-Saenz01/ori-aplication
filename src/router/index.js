@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import ExcelView from '../views/ExcelView.vue'
-import AboutView from '../views/AboutView.vue'
+import ExcelView from '@/views/ExcelView.vue'
+import FilesView from '@/views/FilesView.vue'
+import FileDetailsView from '@/views/FileDetailsView.vue'
 
 const routes = [
   {
@@ -9,9 +10,15 @@ const routes = [
     component: ExcelView
   },
   {
-    path: '/about',
-    name: 'about',
-    component: AboutView
+    path: '/files',
+    name: 'files',
+    component: FilesView
+  },
+  {
+    path: '/files/:id',
+    name: 'file-detail',
+    component: FileDetailsView,
+    props: true,
   }
 ]
 

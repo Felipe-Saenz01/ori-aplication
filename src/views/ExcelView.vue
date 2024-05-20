@@ -1,49 +1,61 @@
 <template>
-  <div class=" mt-5 text-center text-xl font-bold mb-5">
-    <h1>Hola bom dia</h1>
-  </div>
-  <div class="w-full flex ">
-    <div class="w-1/3 border p-5 mr-2 rounded-lg border-black max">
-      <h1 class="text-xl font-bold">Subir Excel</h1>
-      <p>Pequeño Formulario para subir el excel</p>
-      <hr>
-      <div class="flex flex-col my-5">
-            <label class="w-ful mb-2 font-bold" >Archivo</label>
-            <input @change="handleFileChange" class="w-ful bg-gray-200 text-black rounded-md h-12 p-2" type="file"  >
-      </div>
-      <div class="flex justify-center mt-5 text-white">
-        <button @click="handleSaveFile" class="bg-green-500/100 hover:bg-green-600/100 w-1/5 h-8 rounded-md font-bold">Guardar</button>
-      </div>
-
-    </div>
-    <div class="w-1/2 border ml-2">
-      <table v-if="(excelData)" class="w-full text-sm rtl:text-right text-gray-200">
-        <thead class="text-xs text-center uppercase bg-gray-700  text-gray-400">
-            <tr>
-                <th v-for="(header, key) in headers" :key="key" scope="col" class="px-6 py-3">{{ header }}</th>
-            </tr>
-        </thead>
-        <tbody class="text-left">
-            <tr v-for="(row, index) in excelData" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                <td v-for="(value, key) in row" :key="key" scope="row" class="px-6 py-4 font-medium whitespace-nowrap ">{{ value }}</td>
-            </tr>
-
-        </tbody>
-        </table>
-    </div>
-  </div>
-</template> 
+  <v-container class="mt-5" :fluid="true">
+    <v-row class="text-center">
+      <v-col>
+        <h1 class="font-bold mb-5">Exportar Archivo Plano</h1>
+      </v-col>
+    </v-row>
+    <v-divider :thickness="7" class="mx-5 mb-5 "></v-divider>
+    <v-row>
+      <v-col cols="3" class="ml-2" >
+        <v-card class="pa-5 bg-grey-lighten-3">
+          <h2 class="text-xl font-bold text-green">Subir Excel</h2>
+          <p>Pequeño Formulario para subir el excel</p>
+          <v-divider class="my-4"></v-divider>
+          <v-file-input label="Archivo" @change="handleFileChange" outlined></v-file-input>
+          <v-btn color="green" class="mt-5" @click="handleSaveFile">
+            Guardar
+          </v-btn>
+        </v-card>
+      </v-col>
+      <v-col cols="8" pa="8">
+        <v-card ma="3" color="bg-light-green">
+          <v-data-table v-if="excelData && headers.length" :headers="headers" :items="excelData" 
+            theme="dark" class="elevation-1 custom-data-table"></v-data-table>
+          <v-data-table v-else :headers="exampleHeaders" :items="exampleData" 
+            theme="dark" class="elevation-1 custom-data-table"></v-data-table>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
+</template>
 
 <script setup>
 import { ref } from 'vue';
 import * as XLSX from 'xlsx';
 import { db } from '@/services/firebase.js';
-import {collection, addDoc, Timestamp} from 'firebase/firestore';
-
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { useRouter } from 'vue-router';
 
 const file = ref(null);
-const excelData = ref(null);
-const headers = ref([])
+const excelData = ref([]);
+const headers = ref([]);
+const router = useRouter();
+
+// Datos de ejemplo para mostrar en la tabla cuando no se ha subido ningún archivo Excel
+const exampleHeaders = ref([
+  { title: 'Documento', value: 'Documento' },
+  { title: 'Nombres', value: 'Nombres' },
+  { title: 'Correo', value: 'Correo' },
+  { title: 'Género', value: 'Genero' },
+  { title: 'Estado', value: 'Estado' },
+  { title: 'Etiquetas', value: 'Etiquetas' },
+]);
+
+const exampleData = ref([
+  { Documento: '123456', Nombres: 'Juan Perez', Correo: 'juan.perez@example.com', Genero: 'Masculino', Estado: 'Activo', Etiquetas: 'Nuevo' },
+  { Documento: '654321', Nombres: 'Maria Lopez', Correo: 'maria.lopez@example.com', Genero: 'Femenino', Estado: 'Inactivo', Etiquetas: 'Antiguo' },
+]);
 
 const handleFileChange = (event) => {
   file.value = event.target.files[0];
@@ -61,11 +73,11 @@ const handleFileUpload = () => {
     const data = new Uint8Array(e.target.result);
     const workbook = XLSX.read(data, { type: 'array' });
 
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]]; // Solo toma la primera hoja del archivo Excel
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-    headers.value= rows[0];
-    
+    headers.value = rows[0].map(header => ({ title: header, value: header }));
+
     const formattedData = rows.slice(1).map(row => {
       const formattedRow = {};
       rows[0].forEach((header, index) => {
@@ -74,11 +86,9 @@ const handleFileUpload = () => {
       return formattedRow;
     });
 
-    excelData.value = formattedData; // Almacena los datos del archivo Excel en la variable excelData
-
-    console.log(file.value.name)
+    excelData.value = formattedData;
   };
-  reader.readAsArrayBuffer(file.value); 
+  reader.readAsArrayBuffer(file.value);
 };
 
 const handleSaveFile = async () => {
@@ -86,7 +96,7 @@ const handleSaveFile = async () => {
     console.error('No se ha seleccionado ningún archivo.');
     return;
   }
-    
+
   try {
     const docRef = await addDoc(collection(db, "files"), {
       name: file.value.name,
@@ -94,12 +104,20 @@ const handleSaveFile = async () => {
       data: excelData.value,
       created: Timestamp.now()
     });
-    console.log('Archivo subido correctamente a Firestore con ID:', docRef);
+    if(docRef){
+      router.push('/files')
+    }
   } catch (error) {
     console.error('Error al subir el archivo a Firestore:', error);
   }
+};
+</script>
 
-  
+
+<style scoped>
+.custom-data-table thead {
+  background-color: #4CAF50 !important;
+  color: white !important;
 }
 
-</script>
+</style>

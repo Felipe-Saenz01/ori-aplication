@@ -1,30 +1,26 @@
 <template>
-  <nav class="bg-primary text-center ">
-    <router-link to="/">Subir Excel</router-link> |
-    <router-link to="/about">About</router-link>
-  </nav>
-  <router-view/>
+  <v-app theme="dark">
+    <v-navigation-drawer class="elevation-3 ma-2 rounded-xl bg-teal-darken-3" theme="dark" >
+      <v-list-item class="pa-4 text-bold" title="Ori Application" subtitle="Unitrópico"></v-list-item>
+      <v-divider :thickness="3" ></v-divider>
+      <v-list-item prepend-icon="mdi-pen-plus" link to="/" title="Subir Archivo"></v-list-item>
+      <v-list-item prepend-icon="mdi-view-list" link to="/files" title="Lista Archivos"></v-list-item>
+    </v-navigation-drawer>  
+
+    <v-main class="bg-dark">
+      <router-view />
+    </v-main>
+  </v-app>
 </template>
 
+
+
 <style>
-#app {
+body {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
-}
-
-nav {
-  padding: 30px;
   color: #fff;
-}
-
-nav a {
-  font-weight: bold;
-  color: white;
-}
-
-nav a.router-link-exact-active {
-  color: #42b983;
+  background-color: #151419;
 }
 </style>
