@@ -7,7 +7,7 @@
     </v-row>
     <v-divider :thickness="7" class="mx-5 mb-5 "></v-divider>
     <v-row>
-      <v-col cols="3" class="ml-2" >
+      <v-col cols="3" class="ml-2">
         <v-card class="pa-5 bg-grey-lighten-3">
           <h2 class="text-xl font-bold text-green">Subir Excel</h2>
           <p>Pequeño Formulario para subir el excel</p>
@@ -20,10 +20,10 @@
       </v-col>
       <v-col cols="8" pa="8">
         <v-card ma="3" color="bg-light-green">
-          <v-data-table v-if="excelData && headers.length" :headers="headers" :items="excelData" 
-            theme="dark" class="elevation-1 custom-data-table"></v-data-table>
-          <v-data-table v-else :headers="exampleHeaders" :items="exampleData" 
-            theme="dark" class="elevation-1 custom-data-table"></v-data-table>
+          <v-data-table v-if="excelData && headers.length" :headers="headers" :items="excelData" theme="dark"
+            class="elevation-1 custom-data-table"></v-data-table>
+          <v-data-table v-else :headers="exampleHeaders" :items="exampleData" theme="dark"
+            class="elevation-1 custom-data-table"></v-data-table>
         </v-card>
       </v-col>
     </v-row>
@@ -36,11 +36,14 @@ import * as XLSX from 'xlsx';
 import { db } from '@/services/firebase.js';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { useRouter } from 'vue-router';
+import useNotification from '@/store/notification.js';
 
 const file = ref(null);
 const excelData = ref([]);
 const headers = ref([]);
 const router = useRouter();
+const notificationStore = useNotification();
+
 
 // Datos de ejemplo para mostrar en la tabla cuando no se ha subido ningún archivo Excel
 const exampleHeaders = ref([
@@ -104,20 +107,16 @@ const handleSaveFile = async () => {
       data: excelData.value,
       created: Timestamp.now()
     });
-    if(docRef){
-      router.push('/files')
+    if (docRef) {
+      notificationStore.isNotificated = true;
+      notificationStore.content = 'Archivo guardado con exito';
+      notificationStore.type = 'success';
+      router.push({ name: 'files' })
     }
   } catch (error) {
-    console.error('Error al subir el archivo a Firestore:', error);
+    notificationStore.isNotificated = true;
+    notificationStore.content = 'No se pudo guardar el archivo';
+    notificationStore.type = 'error';
   }
 };
 </script>
-
-
-<style scoped>
-.custom-data-table thead {
-  background-color: #4CAF50 !important;
-  color: white !important;
-}
-
-</style>

@@ -16,7 +16,7 @@
                 <td>{{ item.archivo }}</td>
                 <td>{{ item.fechaCreacion }}</td>
                 <td>
-                  <v-icon color="yellow"  @click="goFile(item.id)"> mdi-view-list </v-icon>
+                  <v-icon color="yellow" @click="goFile(item.id)"> mdi-view-list </v-icon>
                 </td>
               </tr>
             </template>
@@ -32,6 +32,9 @@ import { db } from '@/services/firebase.js';
 import { getDocs, collection, query, orderBy } from 'firebase/firestore';
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import useNotificationStore from '@/store/notification.js';
+import { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
 
 
 const exampleHeaders = ref([
@@ -39,6 +42,8 @@ const exampleHeaders = ref([
   { title: 'Fecha Creacion', value: 'fechaCreacion' },
   { title: 'Editar', value: 'editar' },
 ]);
+
+const notificationStore = useNotificationStore()
 
 const files = ref([]);
 
@@ -49,7 +54,12 @@ const formatDate = (timestamp) => {
   return date.toLocaleString(); // Formatear la fecha como una cadena legible
 };
 
-onMounted(async () => {
+onMounted(() => {
+  getData();
+  showNotification();
+});
+
+const getData = async () => {
   const q = query(collection(db, 'files'), orderBy('created', 'desc'))
   const filesCollection = await getDocs(q);
   const filesData = filesCollection.docs.map(doc => {
@@ -60,12 +70,28 @@ onMounted(async () => {
     };
   });
   files.value = filesData;
-}); 
-
+}
 
 const goFile = (fileId) => {
   router.push({ name: 'file-detail', params: { id: fileId } });
 };
 
+
+const showNotification= ()=> {
+  if (notificationStore.isNotificated) {
+    if (notificationStore.type == 'success'){
+      toast.success(notificationStore.content, {
+        transition: toast.TRANSITIONS.FLIP,
+        autoClose: 3000
+      });
+    }else{
+      toast.error(notificationStore.content, {
+        transition: toast.TRANSITIONS.FLIP,
+        autoClose: 3000
+      });
+    }
+    notificationStore.isNotificated = false;
+  }
+}
 
 </script>

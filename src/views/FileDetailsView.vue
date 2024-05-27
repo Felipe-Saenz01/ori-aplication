@@ -13,7 +13,8 @@
                         <p><strong>Fecha de creación:</strong> {{ formatDate(file.created) }}</p>
                     </div>
                     <v-spacer></v-spacer>
-                    <v-btn append-icon="mdi-delete" color="red" class="rounded-lg elevation-8" @click="deleteFile"> Eliminar </v-btn>
+                    <v-btn append-icon="mdi-delete" color="green" class="rounded-lg mr-2 elevation-8" @click="confirmDelete"> Exportar </v-btn>
+                    <v-btn append-icon="mdi-delete" color="red" class="rounded-lg elevation-8" @click="confirmDelete"> Eliminar </v-btn>
                 </v-card>
             </v-col>
         </v-row>
@@ -36,11 +37,15 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { db } from '@/services/firebase.js';
 import { getDoc, doc, deleteDoc } from 'firebase/firestore';
+import Swal from 'sweetalert2';
+import useNotification from '@/store/notification.js';
+
 
 const file = ref({})
 const route = useRoute();
 const router = useRouter();
 const fileId = ref(route.params.id);
+const notificationStore = useNotification()
 
 const formatDate = (timestamp) => {
     if (timestamp && typeof timestamp.toDate === 'function') {
@@ -65,14 +70,35 @@ onMounted(async () => {
     }
 })
 
+const confirmDelete = () => {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡No podrás revertir esto!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminarlo!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            deleteFile();
+        }
+    });
+};
+
 const deleteFile = async () => {
     try {
         const fileDoc = doc(db, 'files', fileId.value);
         await deleteDoc(fileDoc);
-        console.log('Documento eliminado con éxito.');
-        router.push('/files'); // Redirige al view de files
+        notificationStore.isNotificated = true;
+        notificationStore.content = 'Archivo eliminado con exito';
+        notificationStore.type = 'success';
+
+        router.push({name: 'files'}); 
     } catch (error) {
-        console.error('Error al eliminar el documento:', error);
+        notificationStore.isNotificated = true;
+        notificationStore.content = 'No se pudo eliminar el archivo';
+        notificationStore.type = 'error';
     }
 };
 
