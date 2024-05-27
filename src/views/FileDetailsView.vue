@@ -13,8 +13,20 @@
                         <p><strong>Fecha de creación:</strong> {{ formatDate(file.created) }}</p>
                     </div>
                     <v-spacer></v-spacer>
-                    <v-btn append-icon="mdi-delete" color="green" class="rounded-lg mr-2 elevation-8" @click="confirmDelete"> Exportar </v-btn>
-                    <v-btn append-icon="mdi-delete" color="red" class="rounded-lg elevation-8" @click="confirmDelete"> Eliminar </v-btn>
+                    <v-btn 
+                        append-icon="mdi-microsoft-excel" 
+                        color="green" 
+                        class="rounded-lg mr-2 elevation-8" 
+                        @click="exportExcel"> 
+                            Exportar 
+                    </v-btn>
+                    <v-btn 
+                        append-icon="mdi-delete" 
+                        color="red" 
+                        class="rounded-lg elevation-8" 
+                        @click="confirmDelete"> 
+                            Eliminar 
+                    </v-btn>
                 </v-card>
             </v-col>
         </v-row>
@@ -39,6 +51,7 @@ import { db } from '@/services/firebase.js';
 import { getDoc, doc, deleteDoc } from 'firebase/firestore';
 import Swal from 'sweetalert2';
 import useNotification from '@/store/notification.js';
+import * as XLSX from 'xlsx';
 
 
 const file = ref({})
@@ -101,5 +114,22 @@ const deleteFile = async () => {
         notificationStore.type = 'error';
     }
 };
+
+const exportExcel = () =>{
+    const worksheetData = [file.value.headers.map(header => header.title)];
+    file.value.data.forEach(item => {
+        const row = file.value.headers.map(header => item[header.value]);
+        worksheetData.push(row);
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    let fileName = file.value.name;
+    if (fileName.endsWith('.xlsx')) {
+        fileName = fileName.slice(0, -5); // Remove the .xlsx extension
+    }
+    XLSX.writeFile(workbook, `${fileName}.xlsx`);
+}
 
 </script>
