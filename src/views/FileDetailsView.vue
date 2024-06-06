@@ -7,7 +7,7 @@
         </v-row>
         <v-row>
             <v-col>
-                <v-card class="pa-5 mb-1 bg-teal-darken-3 d-flex align-cente">
+                <v-card class="pa-5 mb-1 bg-teal-darken-3 d-flex align-center">
                     <div>
                         <p><strong>Nombre del archivo:</strong> {{ file.name }}</p>
                         <p><strong>Fecha de creación:</strong> {{ formatDate(file.created) }}</p>
