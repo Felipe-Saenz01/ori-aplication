@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import ExcelView from '@/views/ExcelView.vue'
-import FilesView from '@/views/FilesView.vue'
-import FileDetailsView from '@/views/FileDetailsView.vue'
-import LoginView from '@/views/LoginView.vue'
-import RegisterView from '@/views/RegisterView.vue'
+// import ExcelView from '@/views/ExcelView.vue'
+// import FilesView from '@/views/FilesView.vue'
+// import FileDetailsView from '@/views/FileDetailsView.vue'
+// import LoginView from '@/views/LoginView.vue'
+// import RegisterView from '@/views/RegisterView.vue'
 import useAuthStore from '@/store/auth.js'
 
 
@@ -15,7 +15,7 @@ const routes = [
   {
     path: '/login',
     name: 'login',
-    component: LoginView,
+    component: () => import(/* webpackChunkName: "login" */ '@/views/LoginView.vue'),
     meta: {
       requireAuth: false
     }
@@ -23,7 +23,7 @@ const routes = [
   {
     path: '/register',
     name: 'register',
-    component: RegisterView,
+    component: () => import(/* webpackChunkName: "register" */ '@/views/RegisterView.vue'),
     meta: {
       requireAuth: false
     }
@@ -31,7 +31,7 @@ const routes = [
   {
     path: '/excel-create',
     name: 'excel-create',
-    component: ExcelView,
+    component: () => import(/* webpackChunkName: "excel-create" */ '@/views/ExcelView.vue'),
     meta: {
       requireAuth: true
     }
@@ -39,7 +39,7 @@ const routes = [
   {
     path: '/files',
     name: 'files',
-    component: FilesView,
+    component: import(/* webpackChunkName: "files" */ '@/views/FilesView.vue'),
     meta: {
       requireAuth: true
     }
@@ -47,7 +47,7 @@ const routes = [
   {
     path: '/files/:id',
     name: 'file-detail',
-    component: FileDetailsView,
+    component: import(/* webpackChunkName: "files-detail" */ '@/views/FileDetailsView.vue'),
     props: true,
     meta: {
       requireAuth: true

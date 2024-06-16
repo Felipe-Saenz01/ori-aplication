@@ -7,6 +7,7 @@ import '@mdi/font/css/materialdesignicons.css';
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { createPinia } from 'pinia'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 
 // Configura Vuetify
@@ -16,6 +17,7 @@ const vuetify = createVuetify({
 });
 
 const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
 
 const app = createApp(App)
 app.use(pinia)
